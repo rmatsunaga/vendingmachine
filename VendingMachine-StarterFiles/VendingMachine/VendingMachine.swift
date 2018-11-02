@@ -8,7 +8,9 @@
 
 import Foundation
 
-enum VendingSelection {
+// List of potential vending selections
+
+enum VendingSelection: String {
     case soda
     case dietSoda
     case chips
@@ -23,11 +25,15 @@ enum VendingSelection {
     case gum
 }
 
+// Each item has:
+
 protocol VendingItem {
     var price: Double { get }
     var quantity: Int { get set }
     
 }
+
+// Vending machines have:
 
 protocol VendingMachine {
     var selection: [VendingSelection] { get }
@@ -46,8 +52,62 @@ struct Item: VendingItem {
     var quantity: Int
 }
 
+// Errors in creating inventory
+
+enum InventoryError: Error {
+    case invalidResource
+    case conversionFailure
+    case invalidSelection
+}
+
+class PlistConverter {
+    static func dictionary(fromFile name: String, ofType type: String) throws -> [String : AnyObject] {
+        guard let path = Bundle.main.path(forResource: name, ofType: type) else {
+            
+            // File is false.
+            
+            throw InventoryError.invalidResource
+        }
+        guard let dictionary = NSDictionary(contentsOfFile: path) as? [String: AnyObject] else {
+            
+            // data might not convert properly to dictionary
+            
+            throw InventoryError.conversionFailure
+        }
+        
+        return dictionary
+    }
+    
+}
+
+
+class InventoryUnarchiver {
+    static func vendingInventory(fromDictionary dictionary: [String: AnyObject]) throws -> [VendingSelection: VendingItem] {
+        var inventory:[VendingSelection: VendingItem]  = [:]
+        
+        for (key, value) in dictionary {
+            if let itemDictionary = value as? [String: Any],
+                let price = itemDictionary["price"] as? Double,
+                let quantity = itemDictionary["quantity"] as? Int
+            {
+                let item = Item(price: price, quantity: quantity)
+                
+                // Convert item into VendingSelection
+                
+                guard let selection = VendingSelection(rawValue: key) else {
+                    throw InventoryError.invalidSelection
+                }
+                inventory.updateValue(item, forKey: selection)
+            }
+        }
+        return inventory
+    }
+    
+}
+
 class FoodVendingMachine: VendingMachine {
-    let selection: [VendingSelection] = [.soda .dietSoda, .chips, .cookie, .wrap, .sandwich, .candyBar, .popTart, .water, .fruitJuice,      .sportsDrink, .gum]
+    let selection: [VendingSelection] =
+        [.soda, .dietSoda, .chips, .cookie, .wrap, .sandwich, .candyBar, .popTart, .water, .fruitJuice, .sportsDrink, .gum]
     
     var inventory: [VendingSelection : VendingItem]
     
@@ -57,12 +117,12 @@ class FoodVendingMachine: VendingMachine {
         self.inventory = inventory
     }
     
-    func vend(_ quantity: Int, _ selection: VendingSelection) throws {
-        <#code#>
+    func vend(_ quantity: Int, _ selection: VendingSelection) /*throws*/ {
+        print("fuck off")
     }
     
     func deposit(_ amount: Double) {
-        <#code#>
+        print("I love perry")
     }
     
 }
