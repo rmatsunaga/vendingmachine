@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 // List of potential vending selections
 
@@ -23,6 +24,14 @@ enum VendingSelection: String {
     case fruitJuice
     case sportsDrink
     case gum
+    
+    func icon() -> UIImage {
+        if let image = UIImage(named: self.rawValue) {
+            return image
+        } else {
+            return UIImage(named: "default")!
+        }
+    }
 }
 
 // Each item has:
@@ -42,9 +51,9 @@ protocol VendingMachine {
     
     init(inventory: [VendingSelection:VendingItem])
     
-    func vend(_ quantity: Int, _ selection: VendingSelection) throws
+    func vend(selection: VendingSelection, quantity: Int) throws
     func deposit(_ amount: Double)
-    
+    func item(forSelection selection: VendingSelection) -> VendingItem?
 }
 
 struct Item: VendingItem {
@@ -105,6 +114,12 @@ class InventoryUnarchiver {
     
 }
 
+enum VendingMachineError: Error {
+    case invalidSelection
+    case outOfStock
+    case insufficientFunds(required: Double)
+}
+
 class FoodVendingMachine: VendingMachine {
     let selection: [VendingSelection] =
         [.soda, .dietSoda, .chips, .cookie, .wrap, .sandwich, .candyBar, .popTart, .water, .fruitJuice, .sportsDrink, .gum]
@@ -117,12 +132,34 @@ class FoodVendingMachine: VendingMachine {
         self.inventory = inventory
     }
     
-    func vend(_ quantity: Int, _ selection: VendingSelection) /*throws*/ {
-        print("fuck off")
+    func vend(selection: VendingSelection, quantity: Int) throws {
+        guard var item = inventory[selection] else {
+            throw VendingMachineError.invalidSelection
+        }
+        
+        guard item.quantity >= quantity else {
+            throw VendingMachineError.outOfStock
+        }
+        
+        let totalPrice = item.price * Double(quantity)
+        
+        if amountDeposited >= totalPrice {
+            
+            amountDeposited -= totalPrice
+            item.quantity -= quantity
+            
+            inventory.updateValue(item, forKey: selection)
+        } else {
+            let amountRequired = totalPrice - amountDeposited
+            throw VendingMachineError.insufficientFunds(required: amountRequired)
+        }
     }
     
     func deposit(_ amount: Double) {
         print("I love perry")
+    }
+    func item(forSelection selection: VendingSelection) -> VendingItem? {
+        return inventory[selection]
     }
     
 }
