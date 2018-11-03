@@ -156,7 +156,7 @@ class FoodVendingMachine: VendingMachine {
     }
     
     func deposit(_ amount: Double) {
-        print("I love perry")
+        amountDeposited += amount
     }
     func item(forSelection selection: VendingSelection) -> VendingItem? {
         return inventory[selection]

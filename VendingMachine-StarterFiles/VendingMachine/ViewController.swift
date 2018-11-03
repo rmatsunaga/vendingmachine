@@ -75,8 +75,14 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
                 try vendingMachine.vend(selection: currentSelection, quantity: Int(quantityStepper.value))
                 updateDisplayWith(balance: vendingMachine.amountDeposited, totalPrice: 0.0, itemPrice: 0, itemQuantity: 1)
                 
+            } catch VendingMachineError.outOfStock{
+                showAlert(title: "Out of Stock", message: "This item is unavailable. Please make another selection")
+            } catch VendingMachineError.insufficientFunds{
+                showAlert(title: "Insufficient Funds", message: "To purchase your items, please add more money")
+            } catch VendingMachineError.invalidSelection{
+                showAlert(title: "No Item Selected", message: "Please select an item.")
             } catch {
-                //FIXME: Error handling code
+                fatalError("\(error)")
             }
             
             if let indexPath = collectionView.indexPathsForSelectedItems?.first {
@@ -120,6 +126,23 @@ class ViewController: UIViewController, UICollectionViewDataSource, UICollection
         }
     }
     
+    func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        
+        let okAction = UIAlertAction(title: "OK", style: .default, handler: dismissAlert)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
+    }
+    
+    func dismissAlert(sender: UIAlertAction) -> Void {
+        updateDisplayWith(balance: vendingMachine.amountDeposited, totalPrice: 0, itemPrice: 0, itemQuantity: 1)
+    }
+    
+    
+    @IBAction func depositFunds() {
+        vendingMachine.deposit(5.0)
+        updateDisplayWith(balance: vendingMachine.amountDeposited)
+    }
     
     
     // MARK: UICollectionViewDataSource
